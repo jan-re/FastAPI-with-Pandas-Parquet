@@ -1,52 +1,117 @@
 import pandas as pd
 import numpy as np
-from typing import cast
+
+
+# Summarizes information about a dataframe. Includes name of the dataframe, a list of columns, and a total row count.
+class DF_summary():
+    name: str
+    length: int
+    columns: list[str]
+
+    def __init__(self, name: str, length: int, columns: list[str]) -> None:
+        self.name = name
+        self.length = length
+        self.columns = columns.copy()
+
 
 class Flight_data():
-    aircraft_models: dict[str, str | pd.DataFrame]
-    aircraft: dict[str, str | pd.DataFrame]
-    airports: dict[str, str | pd.DataFrame]
-    carriers: dict[str, str | pd.DataFrame]
-    flights: dict[str, str | pd.DataFrame]
+    aircraft_models: dict[str, pd.DataFrame]
+    aircraft: dict[str, pd.DataFrame]
+    airports: dict[str, pd.DataFrame]
+    carriers: dict[str, pd.DataFrame]
+    flights: dict[str, pd.DataFrame]
 
     def __init__(self) -> None:
-        self.aircraft = { 'name': 'aircraft', 'data': pd.read_parquet('../data/aircraft.parquet')}
-        self.aircraft_models = { 'name': 'aircraft_models', 'data': pd.read_parquet('../data/aircraft_models.parquet')}
-        self.airports = { 'name': 'airports', 'data': pd.read_parquet('../data/airports.parquet')}
-        self.carriers = { 'name': 'carriers', 'data': pd.read_parquet('../data/carriers.parquet')}
-        self.flights = { 'name': 'flights', 'data': pd.read_parquet('../data/flights.parquet')}
+        self.aircraft = {'aircraft': pd.read_parquet('../data/aircraft.parquet')}
+        self.aircraft_models = {'aircraft_models': pd.read_parquet('../data/aircraft_models.parquet')}
+        self.airports = {'airports': pd.read_parquet('../data/airports.parquet')}
+        self.carriers = {'carriers': pd.read_parquet('../data/carriers.parquet')}
+        self.flights = {'flights': pd.read_parquet('../data/flights.parquet')}
 
         print('FAA data loaded successfully.')
 
-    def get_all_dataframes(self) -> list[dict[str, str | pd.DataFrame]]:
+    # TODO Unittest
+    def get_all_datasets(self) -> list[dict[str, pd.DataFrame]]:
         return [self.aircraft, self.aircraft_models, self.airports, self.carriers, self.flights]
 
-    def get_dataframe_name(self, df: dict[str, str | pd.DataFrame]) -> str:
-        name = df['name']
-        return cast(str, name)
+    # TODO Unittest
+    def get_df_name(self, df: dict[str, pd.DataFrame]) -> str:
+        keys = list(df.keys())
+        return keys[0]
 
-    def get_columns(self, df: pd.DataFrame) -> list[str]:
+    # TODO Unittest
+    def get_df_columns(self, df: pd.DataFrame) -> list[str]:
         return list(df.columns)
 
+    # TODO Unittest
+    def count_df_rows(self, df: pd.DataFrame) -> int:
+        return len(df.index)
+
+    # TODO Unittest
+    def get_active_aircraft(self) -> pd.DataFrame:
+        return self.aircraft['aircraft'].query('status_code == "A"', inplace=False)
+
+    # TODO Unittest
+    def get_filter_query(self, filter_by: dict[str, str | None]) -> str:
+        cleared_filter_by: dict[str, str] = self.clear_filter_by(filter_by)
+        filters: list[str] = []
+
+        for key, value in cleared_filter_by.items():
+            filters.append('({0} == "{1}")'.format(key, value))
+
+        filter_query = ' & '.join(filters)
+
+        return filter_query
+
+    # TODO Unittest
+    def clear_filter_by(self, filter_by: dict[str, str | None]) -> dict[str, str]:
+        cleared_filter_by: dict[str,str] = {}
+
+        for key, value in filter_by.items():
+            if value is not None:
+                cleared_filter_by[key] = value
+
+        return cleared_filter_by
+
     # Needed for /datasets endpoint
-    def list_datasets(self) -> list[list[str]]:
-        dfs = self.get_all_dataframes()
+    def list_loaded_datasets(self) -> list[DF_summary]:
+        datasets = self.get_all_datasets()
+        loaded_datasets_info: list[DF_summary] = []
 
-        for df in dfs:
-            print('For: ' + self.get_dataframe_name(df))
-            print('Columns: ' + self.get_columns(df))
+        for dataset in datasets:
+            df_name = self.get_df_name(dataset)
+            df = dataset[df_name]
 
-        return [['hello'], ['there']]
+            df_columns = self.get_df_columns(df)
+            df_length = self.count_df_rows(df)
+
+            print(df_name, df_columns)
+
+            df_summary = DF_summary(df_name, df_length, df_columns)
+
+            loaded_datasets_info.append(df_summary)
+
+        return loaded_datasets_info
 
     # Needed for /aircraft_models endpoint
-    def list_aircraft_models(self) -> list[list[str]]:
+    def list_aircraft_models(self) -> str:
+        df: pd.DataFrame = self.aircraft_models['aircraft_models']
+        df.sort_values(by=['model'])
 
-        return [['hello'], ['there']]
+        return df.to_csv(columns=['model', 'manufacturer', 'seats'], header=True)
 
     # Needed for /active_aircraft endpoint
-    def list_active_aircraft(self, manufacturer: str, model: str) -> list[list[str]]:
+    def list_active_aircraft(self, filter_by: dict[str, str | None]) -> str:
+        df_aircraft_models = self.aircraft_models['aircraft_models']
+        df_aircraft = self.get_active_aircraft()
 
-        return [['hello'], ['there']]
+        df_joined = df_aircraft.set_index('aircraft_model_code').join(df_aircraft_models.set_index('aircraft_model_code'), rsuffix='_2')
+
+        filter_query = self.get_filter_query(filter_by)
+        if filter_query:
+            df_joined.query(filter_query, inplace=True)
+
+        return df_joined.to_csv(columns=['manufacturer', 'model', 'seats', 'aircraft_serial', 'name', 'county'], header=True)
 
     def count_active_aircraft(self) -> list[list[int]]:
 
@@ -54,6 +119,3 @@ class Flight_data():
 
 
 data = Flight_data()
-
-
-data.list_datasets()
