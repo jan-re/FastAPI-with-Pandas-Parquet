@@ -14,16 +14,12 @@
 3. Open a second terminal window and navigate to `/Flight_Data_Service_homework/test`
 4. Run `bash example.sh`. This simple script uses several curl requests to test the functionality of the endpoints. To keep the terminal uncluttered, the results are deposited in `/Flight_Data_Service_homework/test/output` in CSV form.
 <br/>
-<br/>
-<br/>
 
 ## What it doesn't do <a name="missing"></a>
 
 I only completed tasks: 1, 2, 3, 4, and bonus 1.
 
 The rest of the tasks are not implemented. Testing of the functionality is also not great: I provided a simple shell script that tests the endpoints with curls, but the code as a whole would benefit a lot from a thorough unit-testing suite.
-<br/>
-<br/>
 <br/>
 
 ## Endpoint documentation
@@ -87,7 +83,6 @@ curl "http://localhost:8080/aircraft/active?model=E75N1&manufacturer=BOEING" \
 curl "http://localhost:8080/aircraft/active?manufacturer=SATER_VERNON_D" \
     -H "Accept: text/csv" -X GET >> air_active_manufacturer_spaces.csv
 ```
-<br/>
 <br/>
 
 ## Ending notes and thanks
