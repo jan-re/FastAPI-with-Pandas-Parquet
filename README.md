@@ -12,7 +12,7 @@
         Server now running...
         ```
 3. Open a second terminal window and navigate to `/Flight_Data_Service_homework/test`
-4. Run `bash example.sh`. This simple script uses several curl requests to test the functionality of the endpoints. To keep the terminal uncluttered, the results are deposited in `/Flight_Data_Service_homework/test/output` in CSV form.
+4. Run `bash test.sh`. You will be prompted for the port the service is running on. Enter it without colon, like this: `8080`. This simple script uses several curl requests to test the functionality of the endpoints. To keep the terminal uncluttered, the results are deposited in `/Flight_Data_Service_homework/test/output` in CSV form.
 <br/>
 
 ## What it doesn't do <a name="missing"></a>
