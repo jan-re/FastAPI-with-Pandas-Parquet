@@ -1,5 +1,4 @@
 # Flight Data Service as implemented for GoodData homework.  
-<br/>
 
 ## How to test what it does 
 
