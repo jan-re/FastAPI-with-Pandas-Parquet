@@ -1,15 +1,8 @@
 from fastapi import Depends, FastAPI
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel
 from .dependencies import FlightData
 
-
-class Query(BaseModel):
-    query: str
-
-
 app = FastAPI()
-
 flight_data: FlightData = FlightData()
 
 
@@ -33,18 +26,11 @@ async def read_active_aircraft(response: str = Depends(flight_data.fetch_active_
     return response
 
 
-@app.get("/reports/modelsByCounty", tags=["reports"], status_code=200, response_class=PlainTextResponse)
-async def read_models_by_county(response: str = Depends(flight_data.fetch_models_by_county)):
+@app.get("/reports/modelsByState", tags=["reports"], status_code=200, response_class=PlainTextResponse)
+async def read_models_by_state(response: str = Depends(flight_data.fetch_models_by_state)):
     return response
 
 
-# @app.get("/reports/modelsByCountyPivot", tags=["reports"], status_code=200)
-# async def read_models_by_county_pivot(data: str = Depends(flight_data.fetch)):
-#     return NotImplemented
-
-#
-#
-#@app.post("/reports/customReport", tags=["reports"], status_code=200)
-#async def create_sql_report(query: Query):
-#    return NotImplemented
-
+@app.get("/reports/modelsByStatePivot", tags=["reports"], status_code=200, response_class=PlainTextResponse)
+async def read_models_by_state_pivot(response: str = Depends(flight_data.fetch_models_by_state_pivot)):
+    return response

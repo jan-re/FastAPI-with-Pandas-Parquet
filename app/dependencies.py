@@ -33,6 +33,7 @@ class FlightData():
 
     def __init__(self) -> None:
         self.handler = Handler()
+        
 
     def load_data(self) -> None:
         self.aircraft = pd.read_parquet("./app//data/aircraft.parquet")
@@ -55,8 +56,11 @@ class FlightData():
     def fetch_active_aircraft(self, manufacturer: str | None = None, model: str | None = None) -> str:
         return self.handler.handle_active_aircraft(self.join_aircraft_and_models(), manufacturer, model)
 
-    def fetch_models_by_county(self) -> str:
-        return self.handler.handle_models_by_county(self.join_aircraft_and_models())
+    def fetch_models_by_state(self) -> str:
+        return self.handler.handle_models_by_state(self.join_aircraft_and_models())
+
+    def fetch_models_by_state_pivot(self) -> str:
+        return self.handler.handle_models_by_state_pivot(self.join_aircraft_and_models())
 
 
 @define
@@ -96,30 +100,37 @@ class Handler():
             response = response.query(f"model == \"{model}\"", inplace=False)
 
         return response.to_csv(
-            columns=["manufacturer", "model", "seats", "aircraft_serial", "name", "county"],
+            columns=["manufacturer", "model", "seats", "aircraft_serial", "name", "state"],
             header=True,
             index=False
         )
 
-    def handle_models_by_county(self, data: pd.DataFrame) -> str:
+    def handle_models_by_state(self, data: pd.DataFrame) -> str:
+        # Type specified because doing groupby with more than one column seems to break type inference.
+        response: pd.DataFrame = data.query("status_code == \"A\"", inplace=False).groupby("state")[
+            "model", "manufacturer"]
+
+        response = response.count().rename(
+            columns={"model": "active model count", "manufacturer": "manufacturer count"})
+
+        return response.to_csv(
+            header=True,
+            index=True
+        )
+
+    def handle_models_by_state_pivot(self, data: pd.DataFrame) -> str:
         response = data.query("status_code == \"A\"", inplace=False)
+        response = response[["manufacturer", "model", "state"]]
 
-        # CONTINUE FROM HERE
-        #response = response.groupby(["county
-
-        # Count aircraft, manufacturer by county
-
-        return data.to_csv(
-            columns=["manufacturer", "model", "seats", "aircraft_serial", "name", "county"],
-            header=True,
-            index=False
+        response = pd.pivot_table(
+            response,
+            index=["manufacturer", "model"],
+            columns=["state"],
+            fill_value="NULL",
+            aggfunc=len
         )
-    
 
-    """
-    Return summary counts of active aircraft models and their manufacturer by the county in
-    which those aircrafts are registered.
-
-    All data needed for this endpoint is in the aircraft and aircraft_models data
-    files.
-    """
+        return response.to_csv(
+            header=True,
+            index=True
+        )
