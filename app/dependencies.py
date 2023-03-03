@@ -4,25 +4,6 @@ import pandas as pd
 
 
 @define
-class DatasetStats():
-    name: str
-    columns: list[str]
-    length: int
-
-    def __init__(self, name, columns, length) -> None:
-        self.name = name
-        self.columns = columns
-        self.length = length
-
-    def return_dataframe(self) -> pd.DataFrame:
-        return pd.DataFrame.from_dict({
-            "name": self.name,
-            "columns": [self.columns],
-            "length": self.length
-        })
-
-
-@define
 class FlightData():
     aircraft: pd.DataFrame
     models: pd.DataFrame
@@ -33,7 +14,6 @@ class FlightData():
 
     def __init__(self) -> None:
         self.handler = Handler()
-        
 
     def load_data(self) -> None:
         self.aircraft = pd.read_parquet("./app//data/aircraft.parquet")
@@ -134,3 +114,22 @@ class Handler():
             header=True,
             index=True
         )
+
+
+@define
+class DatasetStats():
+    name: str
+    columns: list[str]
+    length: int
+
+    def __init__(self, name, columns, length) -> None:
+        self.name = name
+        self.columns = columns
+        self.length = length
+
+    def return_dataframe(self) -> pd.DataFrame:
+        return pd.DataFrame.from_dict({
+            "name": self.name,
+            "columns": [self.columns],
+            "length": self.length
+        })

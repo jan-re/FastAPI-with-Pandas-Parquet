@@ -3,7 +3,7 @@ from fastapi.responses import PlainTextResponse
 from .dependencies import FlightData
 
 app = FastAPI()
-flight_data: FlightData = FlightData()
+flight_data = FlightData()
 
 
 @app.on_event("startup")
