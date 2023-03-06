@@ -1,6 +1,10 @@
 from __future__ import annotations
 from attrs import define
 import pandas as pd
+import os
+
+
+
 
 
 @define
@@ -16,11 +20,13 @@ class FlightData():
         self.handler = Handler()
 
     def load_data(self) -> None:
-        self.aircraft = pd.read_parquet("./app//data/aircraft.parquet")
-        self.models = pd.read_parquet("./app/data/aircraft_models.parquet")
-        self.airports = pd.read_parquet("./app/data/airports.parquet")
-        self.carriers = pd.read_parquet("./app/data/carriers.parquet")
-        self.flights = pd.read_parquet("./app/data/flights.parquet")
+        root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+
+        self.aircraft = pd.read_parquet(f"{root_dir}/app/data/aircraft.parquet")
+        self.models = pd.read_parquet(f"{root_dir}/app/data/aircraft_models.parquet")
+        self.airports = pd.read_parquet(f"{root_dir}/app/data/airports.parquet")
+        self.carriers = pd.read_parquet(f"{root_dir}/app/data/carriers.parquet")
+        self.flights = pd.read_parquet(f"{root_dir}/app/data/flights.parquet")
 
         print("INFO:     Flight data loaded!")
 
@@ -86,12 +92,9 @@ class Handler():
         )
 
     def handle_models_by_state(self, data: pd.DataFrame) -> str:
-        # Type specified because doing groupby with more than one column seems to break type inference.
-        response: pd.DataFrame = data.query("status_code == \"A\"", inplace=False).groupby("state")[
-            "model", "manufacturer"]
-
-        response = response.count().rename(
-            columns={"model": "active model count", "manufacturer": "manufacturer count"})
+        response = data.query("status_code == \"A\"", inplace=False)
+        response = response.groupby("state")[["model", "manufacturer"]].count()
+        response = response.rename(columns={"model": "active model count", "manufacturer": "manufacturer count"})
 
         return response.to_csv(
             header=True,

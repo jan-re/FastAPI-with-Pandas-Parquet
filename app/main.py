@@ -1,10 +1,10 @@
+import uvicorn
 from fastapi import Depends, FastAPI
 from fastapi.responses import PlainTextResponse
-from .dependencies import FlightData
+from dependencies import FlightData
 
 app = FastAPI()
 flight_data = FlightData()
-
 
 @app.on_event("startup")
 def startup_load():
@@ -34,3 +34,12 @@ async def read_models_by_state(response: str = Depends(flight_data.fetch_models_
 @app.get("/reports/modelsByStatePivot", tags=["reports"], status_code=200, response_class=PlainTextResponse)
 async def read_models_by_state_pivot(response: str = Depends(flight_data.fetch_models_by_state_pivot)):
     return response
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host="127.0.0.1",
+        port=8000,
+        log_level="info",
+        reload="true"
+    )
